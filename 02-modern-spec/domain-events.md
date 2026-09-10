@@ -141,9 +141,13 @@ O `REQ-AUD-008` exige códigos de ação não ambíguos. O legado colapsa três 
 
 ## Estabilidade do contrato
 
-Este catálogo é **provisório para as fatias 2 a 5**. Os eventos de Cadastro, Catálogo e Pagamento serão confirmados quando cada fatia for especificada.
+| Contexto | Situação dos eventos |
+|---|---|
+| Cadastro de Beneficiário | **Confirmados** pela [spec 003](../specs/003-cadastro-de-beneficiario/spec.md), sem alteração de forma |
+| Catálogo de Programas Sociais | Provisório até a Fatia 3 |
+| Pagamento | Provisório até as fatias 4 e 5 |
 
-O que **não** muda: a forma do evento, o `Actor` obrigatório, a publicação dentro da transação e o roteamento para uma das duas tabelas. É isso que a Fatia 1 implementa e precisa estar certo.
+O que **não** muda: a forma do evento, o `Actor` obrigatório, a publicação dentro da transação e o roteamento para uma das duas tabelas. É isso que a Fatia 1 implementou e que a Fatia 2 exerce pela primeira vez como publicadora.
 
 Acrescentar um evento depois é barato: o consumidor já existe. Mudar a forma do evento depois é caro, porque todos os publicadores precisam ser tocados.
 
