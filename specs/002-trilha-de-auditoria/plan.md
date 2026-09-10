@@ -177,10 +177,26 @@ Testcontainers com PostgreSQL 16. Particionamento e permissões não são simul�
 
 ---
 
+## Ajustes durante a implementação
+
+Dois pontos divergem do desenho acima. Ambos preservam a garantia especificada.
+
+| Decidido no plano | Implementado | Razão |
+|---|---|---|
+| `BIGSERIAL` | Sequência com `INCREMENT BY 500` e `allocationSize` correspondente | `BIGSERIAL` é uma sequência com incremento 1, e o Hibernate desabilita inserção em lote quando a chave vem por `IDENTITY`. O `REQ-AUD-003` exige unicidade, não contiguidade. Sem isso, a T-110 não fecharia. |
+| Um evento por publicação | `AuditableEventBatch` acrescentado ao contrato | Publicar 3,8 milhões de eventos individuais atravessa o listener 3,8 milhões de vezes. A forma de cada evento não muda. |
+
+Duas garantias foram além do plano, por serem baratas no banco e caras na aplicação:
+
+- Restrição `CHECK` sobre `action` em cada tabela. O roteamento entre a trilha de alteração e a de acesso vira invariante do banco, e não decisão que um chamador possa contornar.
+- A função de expurgo é `SECURITY DEFINER` e recusa qualquer tabela fora da trilha. Sem essa guarda, seria um vetor de exclusão arbitrária.
+
+---
+
 ## Definição de pronto
 
 - [x] Modelo de dados definido, com particionamento e índices justificados.
 - [x] Invariante de imutabilidade com mecanismo de garantia definido.
 - [x] Contrato de comunicação entre contextos especificado.
 - [x] Riscos identificados com mitigação.
-- [ ] Tarefas geradas em [`tasks.md`](tasks.md).
+- [x] Tarefas geradas em [`tasks.md`](tasks.md).

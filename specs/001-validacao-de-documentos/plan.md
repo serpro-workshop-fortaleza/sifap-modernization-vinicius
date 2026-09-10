@@ -149,4 +149,4 @@ JUnit 5 com `@ParameterizedTest` para os vetores. Sem Mockito: não há colabora
 - [x] Contrato de retorno especificado com motivos exaustivos.
 - [x] Estratégia de testes definida, com limitação de caracterização registrada.
 - [x] Riscos identificados com mitigação.
-- [ ] Tarefas geradas em [`tasks.md`](tasks.md).
+- [x] Tarefas geradas em [`tasks.md`](tasks.md).

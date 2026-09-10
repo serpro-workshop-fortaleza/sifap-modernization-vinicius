@@ -166,4 +166,4 @@ QUANDO a carga inicial encontrar um documento que se torne inválido pela regra 
 - [x] Todo REQ-ID tem `source_legacy:` apontando para arquivo existente ou `[GREENFIELD]` justificado.
 - [x] Todo requisito tem critérios de aceitação em Dado/Quando/Então.
 - [x] Cada requisito declara o nível de tratamento do [ADR-0003](../../docs/adr/0003-preservacao-de-comportamento.md).
-- [ ] `plan.md` e `tasks.md` gerados.
+- [x] `plan.md` e `tasks.md` gerados.
