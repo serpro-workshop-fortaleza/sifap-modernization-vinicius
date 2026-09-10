@@ -15,19 +15,131 @@
 
 ---
 
+**Data**: 2026-09-10
+**Fatia em especificação**: 1 — Fundações transversais
+**Features formais**: [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md), [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md)
+
+---
+
 ## Decisões de escopo
+
+### Estruturais
 
 | Decisão | Evidência ou justificativa | Impacto nos artefatos formais |
 |---|---|---|
-| <!-- preencher --> | <!-- preencher --> | <!-- preencher --> |
+| Migrar o sistema completo, em cinco fatias ordenadas por dependência | `BATCHPGT` lê `BENEFIC` e `SOCPROG` para escrever `PAYMENT`; 175 regras não cabem em uma especificação | Seção 4 do [`discovery-report.md`](../01-archaeology/discovery-report.md) |
+| Fatia de migração não é contexto delimitado | Fatia é unidade de trabalho ordenada por dependência; contexto é fronteira de modelo | [`bounded-contexts.md`](bounded-contexts.md) |
+| Quatro contextos delimitados e um kernel compartilhado | Avaliação por coesão, acoplamento e frequência de mudança | [`bounded-contexts.md`](bounded-contexts.md) |
+| Preservar comportamento do código, não a regra documentada | O documento de 2012 declara-se não validado; sete de oito integrantes da equipe original saíram | [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md) |
+
+### Rejeições registradas
+
+| Hipótese rejeitada | Motivo | Destino |
+|---|---|---|
+| Fundações transversais como contexto único | Agrupa capacidades sem relação de domínio, com ciclos de mudança divergentes | Dividida em kernel de validação e contexto de auditoria |
+| Conciliação Bancária como contexto separado | Escreve `PAYMENT`, a mesma tabela que a Folha escreve; propriedade compartilhada de dados é o antipadrão que a decomposição evita | Absorvida pelo contexto Pagamento |
+
+> A frequência de mudança divergente da conciliação é real e fica como ponto de reavaliação. Se ela passar a mudar em ritmo próprio, o caminho é extrair submódulo com evento de domínio — nunca compartilhar tabela.
+
+### Correções deliberadas ao comportamento legado
+
+Oito correções na Fatia 1, todas de integridade ou de controle. **Nenhuma altera valor de benefício**, que é o critério do [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md).
+
+| Correção | Requisito | Legado divergente |
+|---|---|---|
+| CPF de dígitos repetidos é inválido | `REQ-DOC-002` | `CADBENEF.NSP:344-413` não verifica |
+| Prefixo especial não anula outras validações | `REQ-DOC-008` | `VALDOCS.NSP:226-241` zera todos os erros |
+| Sem documento de teste em produção | `REQ-DOC-009` | `VALBENEF.NSN:229-245` aceita prefixo `000` |
+| Numeração de auditoria por sequência do banco | `REQ-AUD-003` | `CCAUDIT.NSC:64-71` lê o maior e incrementa em memória |
+| Instante com precisão de milissegundos | `REQ-AUD-004` | `CCAUDIT.NSC:74-77` descarta o décimo de segundo |
+| Registro de autor e perfil | `REQ-AUD-005` | Campo existe no dicionário e nunca é gravado |
+| Registro de valores anterior e posterior | `REQ-AUD-006` | Estrutura existe desde 2005 e nunca foi preenchida |
+| Evento por operação, não por ciclo | `REQ-AUD-010` | `BATCHPGT.NSP:536-546` grava um evento para 3,8 milhões de pagamentos |
+
+---
+
+## Adiamentos
+
+| Item | Motivo | Destino |
+|---|---|---|
+| `REQ-DOC-010` — sinalização de documento inválido na carga | Depende do processo de carga | Fatia 2 |
+| `REQ-AUD-011` — exibir exclusões no relatório | Regra pertence à auditoria; a tela pertence a relatórios | Fatia 5 |
+| Validação de RG | Legado valida apenas comprimento mínimo | Fatia 2 |
+| Migração dos FNR 154, 155 e 156 | Três arquivos de auditoria histórica sem DDM publicado | Fatia 5 |
+| Relatórios de pagamento e auditoria | Leem dados que fatias anteriores produzem | Fatia 5 |
+| Conciliação bancária | Depende de pagamentos gerados | Fatia 5 |
+
+---
+
+## Marcados como greenfield
+
+| Item | Requisito | Justificativa |
+|---|---|---|
+| Sinalização de documento inválido na carga inicial | `REQ-DOC-010` | O legado não possui processo de carga; o requisito decorre da correção do [ADR-0005](../docs/adr/0005-rotina-unica-validacao-cpf.md) e protege contra exclusão indevida de beneficiário |
+
+Único `[GREENFIELD]` das duas features. Todos os outros 22 requisitos têm origem em membro Natural ou DDM real.
+
+---
+
+## Fora do escopo de modernização
+
+| Item | Motivo |
+|---|---|
+| Eventos de login e logout | 25 milhões de registros gravados por código ausente do acervo |
+| Consulta a base externa de CPF | Não existe no legado |
+| Integração com SIAFI, retorno da CAIXA e cruzamento com CadÚnico | Citados na documentação; nenhum programa do acervo os implementa |
+| Hiperdescritor `H1` | Rotina em Assembler ligada ao núcleo do Adabas, fora do acervo |
 
 ---
 
 ## Questões em aberto
 
+Os 20 mistérios canônicos permanecem **sem validação humana**. A política do [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md) define como proceder até que ela venha; nenhum bloqueia o Estágio 2.
+
+### Afetam a Fatia 1 em especificação
+
 | Questão | Fonte consultada | Próxima pessoa responsável |
 |---|---|---|
-| <!-- preencher --> | <!-- preencher --> | <!-- preencher --> |
+| `M-14` — que norma criou os oito prefixos de CPF que zeram todos os erros? | `VALDOCS.NSP:226-241` | DEFIS |
+| `M-15` — por que CPF iniciado em `000` é válido como documento de teste? | `VALBENEF.NSN:229-245` | SUPDE/DESIF |
+| `M-16` — qual das cinco rotinas de CPF é a correta? | `CCVALCPF.NSC:32-37` | SUPDE/DESIF |
+| `M-17` — qual norma prevalece sobre auditar consultas? | `CCAUDIT.NSC:45-49` | CGTI/MDAS |
+| `M-18` — por que o relatório de auditoria omite as exclusões? | `RELAUDIT.NSP:128-134` | DEFIS |
+| `M-19` — `CO` significa consulta ou conciliação? | `AUDIT.ddm:41` | SUPDE/DESIF |
+
+### Bloqueiam decisão futura, não a Fatia 1
+
+| Questão | Fonte consultada | Próxima pessoa responsável |
+|---|---|---|
+| `M-09` — qual fórmula de cálculo está vigente? | `CALCBENF.NSN:255-258` | SENARC |
+| `M-10` — qual das duas contribuições sociais é a vigente? | `CALCBENF.NSN:356-366` | SENARC |
+| `M-11` — a faixa de renda usa renda familiar ou per capita? | `CALCBENF.NSN:174` | SENARC |
+
+> Estes três definem valores pagos. A política de preservação permite especificar a Fatia 4 sem eles, mas a decisão de manter ou corrigir o comportamento continua pendente.
+
+---
+
+## Limitação registrada
+
+> [!WARNING]
+> **Não há ambiente legado disponível para caracterização por execução.** Os vetores de teste são derivados da leitura do código, não da captura de entrada e saída reais. Isso vale como premissa, não como prova, e deve ser reconfirmado antes da carga inicial se o acesso for obtido.
+
+Descoberta durante a elaboração do [`plan.md`](../specs/001-validacao-de-documentos/plan.md) da feature 001. Afeta todas as fatias que dependem de teste de caracterização.
+
+---
+
+## Estado do Estágio 2
+
+| Artefato | Situação |
+|---|---|
+| [`bounded-contexts.md`](bounded-contexts.md) | 4 contextos + 1 kernel |
+| [`domain-events.md`](domain-events.md) | 12 eventos mapeados para 6 ações de auditoria |
+| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md) | Aceitas |
+| [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | Completa — 10 requisitos, 10 tarefas |
+| [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | Completa — 13 requisitos, 13 tarefas |
+| Fatias 2 a 5 | Não especificadas |
+
+**Fatia 1 pronta para implementação.** 23 requisitos, 23 tarefas, um único `[GREENFIELD]`.
 
 ---
 

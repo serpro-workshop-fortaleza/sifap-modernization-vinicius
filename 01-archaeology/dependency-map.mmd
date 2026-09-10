@@ -1,0 +1,164 @@
+%% SIFAP - Mapa de dependências da biblioteca SIFAPPRD
+%% Escopo: 01-archaeology/legacy-sifap/natural-programs/ (24 membros, rastreamento recursivo)
+%% Gerado em 2026-09-10 por /map-dependencies
+%% Toda aresta é rastreável a arquivo:linha em dependency-map.md
+%%
+%% Legenda de arestas:
+%%   ==>  CALLNAT   (invocação de subprograma, cruza fronteira de arquivo)
+%%   -.-> INCLUDE   (copycode inserido em tempo de compilação)
+%%   ..>  USING     (área de dados compartilhada: PDA/LDA)
+%%   -->  acesso a dados, rotulado com a operação Adabas
+flowchart TB
+    classDef prog fill:#0f172a,stroke:#334155,color:#e2e8f0
+    classDef sub fill:#0f172a,stroke:#334155,color:#e2e8f0,stroke-width:2px
+    classDef copy fill:#0f172a,stroke:#334155,color:#e2e8f0,stroke-dasharray:4 3
+    classDef area fill:#0f172a,stroke:#334155,color:#e2e8f0,stroke-dasharray:2 2
+    classDef data fill:#0f172a,stroke:#334155,color:#e2e8f0,stroke-width:2px
+    classDef job fill:#0f172a,stroke:#334155,color:#e2e8f0
+
+    subgraph JOBS["Agendamento z/OS"]
+        J01["SIFAPJ01<br/>1º dia útil 22h"]:::job
+        J02["SIFAPJ02<br/>2º dia útil 06h"]:::job
+    end
+
+    subgraph CAD["Cadastro"]
+        CADBENEF["CADBENEF"]:::prog
+        CADDEPEN["CADDEPEN"]:::prog
+        CADPROG["CADPROG"]:::prog
+    end
+
+    subgraph CALC["Cálculo"]
+        CALCBENF["CALCBENF<br/>(subprograma)"]:::sub
+        CALCCORR["CALCCORR"]:::prog
+        CALCDSCT["CALCDSCT<br/>SEM CHAMADOR"]:::prog
+    end
+
+    subgraph VAL["Validação"]
+        VALBENEF["VALBENEF<br/>(subprograma)"]:::sub
+        VALELEG["VALELEG<br/>(subprograma)"]:::sub
+        VALDOCS["VALDOCS"]:::prog
+    end
+
+    subgraph BAT["Batch"]
+        BATCHPGT["BATCHPGT"]:::prog
+        BATCHREL["BATCHREL"]:::prog
+        BATCHCON["BATCHCON<br/>execução manual"]:::prog
+    end
+
+    subgraph CONS["Consultas e relatórios"]
+        CONSBENF["CONSBENF"]:::prog
+        RELPGT["RELPGT"]:::prog
+        RELAUDIT["RELAUDIT"]:::prog
+    end
+
+    subgraph SHARED["Membros compartilhados"]
+        SUBVALCP["SUBVALCP<br/>(subprograma)"]:::sub
+        SUBVALNI["SUBVALNI<br/>(subprograma)"]:::sub
+        CCVALCPF["CCVALCPF<br/>(copycode)"]:::copy
+        CCAUDIT["CCAUDIT<br/>(copycode)"]:::copy
+        PDACALC["PDACALC<br/>(PDA)"]:::area
+        PDAVALID["PDAVALID<br/>(PDA)"]:::area
+        LDASIFAP["LDASIFAP<br/>(LDA)"]:::area
+    end
+
+    subgraph DATA["Adabas DBID 057"]
+        BENEFIC[("BENEFIC<br/>FNR 150")]:::data
+        SOCPROG[("SOCPROG<br/>FNR 151")]:::data
+        PAYMENT[("PAYMENT<br/>FNR 152")]:::data
+        AUDIT[("AUDIT<br/>FNR 153")]:::data
+    end
+
+    subgraph WORK["Arquivos sequenciais"]
+        CMWKF01[("CMWKF01<br/>remessa/retorno")]:::data
+        CMWKF02[("CMWKF02<br/>rejeitados")]:::data
+    end
+
+    %% ---------- Agendamento ----------
+    J01 ==>|"STEP010"| BATCHPGT
+    J02 ==>|"STEP010"| BATCHREL
+    J02 ==>|"STEP020"| RELPGT
+
+    %% ---------- CALLNAT ----------
+    BATCHPGT ==>|"CALLNAT"| SUBVALCP
+    BATCHPGT ==>|"CALLNAT"| VALELEG
+    BATCHPGT ==>|"CALLNAT"| CALCBENF
+    CADBENEF ==>|"CALLNAT"| SUBVALCP
+    CADBENEF ==>|"CALLNAT"| SUBVALNI
+    CADBENEF ==>|"CALLNAT sem PDA"| VALBENEF
+    CALCCORR ==>|"CALLNAT"| SUBVALCP
+    CONSBENF ==>|"CALLNAT"| SUBVALCP
+    VALDOCS  ==>|"CALLNAT"| SUBVALNI
+
+    %% ---------- INCLUDE ----------
+    BATCHCON -.->|"INCLUDE"| CCAUDIT
+    BATCHPGT -.->|"INCLUDE"| CCAUDIT
+    CADBENEF -.->|"INCLUDE"| CCAUDIT
+    CADDEPEN -.->|"INCLUDE"| CCAUDIT
+    CADPROG  -.->|"INCLUDE"| CCAUDIT
+    CALCCORR -.->|"INCLUDE"| CCAUDIT
+    CONSBENF -.->|"INCLUDE"| CCAUDIT
+    CADDEPEN -.->|"INCLUDE"| CCVALCPF
+    SUBVALCP -.->|"INCLUDE"| CCVALCPF
+
+    %% ---------- USING ----------
+    BATCHPGT ..-> PDACALC
+    CALCBENF ..-> PDACALC
+    VALELEG  ..-> PDACALC
+    BATCHPGT ..-> PDAVALID
+    CADBENEF ..-> PDAVALID
+    CALCCORR ..-> PDAVALID
+    CONSBENF ..-> PDAVALID
+    VALDOCS  ..-> PDAVALID
+    SUBVALCP ..-> PDAVALID
+    SUBVALNI ..-> PDAVALID
+    BATCHCON ..-> LDASIFAP
+    BATCHPGT ..-> LDASIFAP
+    BATCHREL ..-> LDASIFAP
+    CADDEPEN ..-> LDASIFAP
+    CADPROG  ..-> LDASIFAP
+    CALCBENF ..-> LDASIFAP
+    CALCCORR ..-> LDASIFAP
+    CALCDSCT ..-> LDASIFAP
+    CONSBENF ..-> LDASIFAP
+    RELAUDIT ..-> LDASIFAP
+    RELPGT   ..-> LDASIFAP
+    VALBENEF ..-> LDASIFAP
+    VALELEG  ..-> LDASIFAP
+
+    %% ---------- Acesso a BENEFIC ----------
+    CADBENEF -->|"FIND / STORE / UPDATE"| BENEFIC
+    CADDEPEN -->|"FIND / UPDATE"| BENEFIC
+    BATCHPGT -->|"READ"| BENEFIC
+    BATCHREL -->|"FIND"| BENEFIC
+    CALCBENF -->|"FIND"| BENEFIC
+    CALCDSCT -->|"FIND"| BENEFIC
+    CONSBENF -->|"FIND"| BENEFIC
+    RELPGT   -->|"FIND"| BENEFIC
+    VALELEG  -->|"FIND"| BENEFIC
+
+    %% ---------- Acesso a SOCPROG ----------
+    CADPROG  -->|"FIND / STORE"| SOCPROG
+    BATCHPGT -->|"FIND"| SOCPROG
+    CALCBENF -->|"FIND"| SOCPROG
+    VALELEG  -->|"FIND"| SOCPROG
+
+    %% ---------- Acesso a PAYMENT ----------
+    CALCBENF -->|"STORE"| PAYMENT
+    BATCHPGT -->|"READ / FIND NUMBER / STORE"| PAYMENT
+    CALCCORR -->|"READ / UPDATE"| PAYMENT
+    CALCDSCT -->|"FIND / UPDATE"| PAYMENT
+    BATCHCON -->|"FIND / UPDATE"| PAYMENT
+    BATCHREL -->|"READ"| PAYMENT
+    CONSBENF -->|"READ"| PAYMENT
+    RELPGT   -->|"READ"| PAYMENT
+
+    %% ---------- Acesso a AUDIT ----------
+    CCAUDIT  -->|"READ / STORE"| AUDIT
+    BATCHCON -->|"READ / STORE"| AUDIT
+    RELAUDIT -->|"READ / HISTOGRAM"| AUDIT
+
+    %% ---------- Arquivos sequenciais ----------
+    BATCHPGT -->|"WRITE"| CMWKF01
+    BATCHPGT -->|"WRITE"| CMWKF02
+    BATCHREL -->|"WRITE"| CMWKF01
+    BATCHCON -->|"READ"| CMWKF01
