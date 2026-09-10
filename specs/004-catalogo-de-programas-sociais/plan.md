@@ -280,6 +280,18 @@ A mesma das fatias anteriores: **não há ambiente legado disponível.** Vale re
 
 ---
 
+## Ajustes durante a implementação
+
+Um ponto divergiu do desenho, por restrição do mapeamento objeto-relacional.
+
+| Decidido no plano | Implementado | Razão |
+|---|---|---|
+| Faixas e regiões como `List` | `Set` no agregado, `List` ordenada na projeção | O Hibernate recusa buscar duas coleções `bag` no mesmo *fetch join* (`MultipleBagFetchException`), e o programa tem duas. A ordem nunca foi propriedade do dado — é do modo de exibir —, então passou para o mapper. |
+
+Nenhuma regra de negócio mudou: a invariante de não sobreposição continua no agregado, e a ordenação por renda continua garantida na projeção.
+
+---
+
 ## Definição de pronto
 
 - [x] Estrutura de pacote definida e alinhada ao mapa de contextos.

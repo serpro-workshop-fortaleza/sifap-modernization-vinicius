@@ -87,4 +87,27 @@ class ArchitectureTest {
                             "br.gov.sifap.payment..")
                     .because("o cadastro publica AuditableEvent e nao conhece quem o consome; "
                             + "conhecer a auditoria recriaria o acoplamento do PERFORM WRITE-AUDIT");
+
+    @ArchTest
+    static final ArchRule catalogo_nao_expoe_seu_pacote_interno =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage("br.gov.sifap.socialprogram..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("br.gov.sifap.socialprogram.internal..")
+                    .because("o calculo consome SocialProgramParameters, nunca o agregado");
+
+    @ArchTest
+    static final ArchRule catalogo_nao_conhece_os_demais_contextos =
+            noClasses()
+                    .that()
+                    .resideInAPackage("br.gov.sifap.socialprogram..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "br.gov.sifap.audit..",
+                            "br.gov.sifap.beneficiary..",
+                            "br.gov.sifap.payment..")
+                    .because("o catalogo e escritor unico do seu dado e nao le nenhum outro contexto");
 }
