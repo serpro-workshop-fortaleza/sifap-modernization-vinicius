@@ -49,7 +49,24 @@ public final class Cpf {
 
     /** Representacao para log e mensagem de erro, sem expor o documento completo. */
     public String masked() {
-        return "***." + value.substring(3, 6) + "." + value.substring(6, 9) + "-**";
+        return mask(value);
+    }
+
+    /**
+     * Mascara um CPF sem exigir que ele seja valido.
+     *
+     * <p>Necessario para exibir registro migrado cujo documento e invalido: ocultar dado
+     * pessoal nao pode depender de o dado estar correto.
+     */
+    public static String mask(String rawCpf) {
+        if (rawCpf == null) {
+            return "";
+        }
+        String digits = rawCpf.trim();
+        if (digits.length() != CpfValidatorImpl.LENGTH) {
+            return "***";
+        }
+        return "***." + digits.substring(3, 6) + "." + digits.substring(6, 9) + "-**";
     }
 
     @Override
