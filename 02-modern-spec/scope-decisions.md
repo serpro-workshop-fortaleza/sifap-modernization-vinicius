@@ -62,9 +62,11 @@ Oito correções na Fatia 1, todas de integridade ou de controle. **Nenhuma alte
 
 | Item | Motivo | Destino |
 |---|---|---|
-| `REQ-DOC-010` — sinalização de documento inválido na carga | Depende do processo de carga | Fatia 2 |
+| `REQ-DOC-010` — sinalização de documento inválido na carga | Dependia do processo de carga | **Resolvido:** absorvido pelo `REQ-BEN-020` |
 | `REQ-AUD-011` — exibir exclusões no relatório | Regra pertence à auditoria; a tela pertence a relatórios | Fatia 5 |
-| Validação de RG | Legado valida apenas comprimento mínimo | Fatia 2 |
+| Validação de RG | Legado valida apenas comprimento mínimo | Fatia 2 — mantido fora do escopo da spec 003 |
+| Transições válidas entre situações cadastrais | Sem fonte normativa; nenhum programa do acervo altera situação | Depende de validação humana; ver [ADR-0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md) |
+| Exclusão de dependente | Não existe no `CADDEPEN` | Fatia futura |
 | Migração dos FNR 154, 155 e 156 | Três arquivos de auditoria histórica sem DDM publicado | Fatia 5 |
 | Relatórios de pagamento e auditoria | Leem dados que fatias anteriores produzem | Fatia 5 |
 | Conciliação bancária | Depende de pagamentos gerados | Fatia 5 |
@@ -76,8 +78,9 @@ Oito correções na Fatia 1, todas de integridade ou de controle. **Nenhuma alte
 | Item | Requisito | Justificativa |
 |---|---|---|
 | Sinalização de documento inválido na carga inicial | `REQ-DOC-010` | O legado não possui processo de carga; o requisito decorre da correção do [ADR-0005](../docs/adr/0005-rotina-unica-validacao-cpf.md) e protege contra exclusão indevida de beneficiário |
+| Migração sinalizada de registro inválido | `REQ-BEN-020` | Absorve o `REQ-DOC-010` e o estende às demais correções da Fatia 2 |
 
-Único `[GREENFIELD]` das duas features. Todos os outros 22 requisitos têm origem em membro Natural ou DDM real.
+Dois `[GREENFIELD]` em 44 requisitos, e o segundo é a continuação do primeiro. Todos os demais têm origem em membro Natural ou DDM real.
 
 ---
 
@@ -96,10 +99,13 @@ Oito correções na Fatia 1, todas de integridade ou de controle. **Nenhuma alte
 
 Os 20 mistérios canônicos permanecem **sem validação humana**. A política do [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md) define como proceder até que ela venha; nenhum bloqueia o Estágio 2.
 
-### Afetam a Fatia 1 em especificação
+### Afetam as fatias já especificadas
 
 | Questão | Fonte consultada | Próxima pessoa responsável |
 |---|---|---|
+| `M-01` — por que beneficiários com mais de 75 anos são suspensos automaticamente? | `CADBENEF.NSP:250-251` | SENARC |
+| `M-02` — qual é o limite válido de dependentes: 3, 5, 6 ou 10? | `CADDEPEN.NSP:117` | SENARC |
+| `M-03` — por que a alteração grava a situação cadastral em branco? | `CADBENEF.NSP:314` | SUPDE/DESIF |
 | `M-14` — que norma criou os oito prefixos de CPF que zeram todos os erros? | `VALDOCS.NSP:226-241` | DEFIS |
 | `M-15` — por que CPF iniciado em `000` é válido como documento de teste? | `VALBENEF.NSN:229-245` | SUPDE/DESIF |
 | `M-16` — qual das cinco rotinas de CPF é a correta? | `CCVALCPF.NSC:32-37` | SUPDE/DESIF |
@@ -107,7 +113,7 @@ Os 20 mistérios canônicos permanecem **sem validação humana**. A política d
 | `M-18` — por que o relatório de auditoria omite as exclusões? | `RELAUDIT.NSP:128-134` | DEFIS |
 | `M-19` — `CO` significa consulta ou conciliação? | `AUDIT.ddm:41` | SUPDE/DESIF |
 
-### Bloqueiam decisão futura, não a Fatia 1
+### Bloqueiam decisão futura
 
 | Questão | Fonte consultada | Próxima pessoa responsável |
 |---|---|---|
@@ -133,13 +139,16 @@ Descoberta durante a elaboração do [`plan.md`](../specs/001-validacao-de-docum
 | Artefato | Situação |
 |---|---|
 | [`bounded-contexts.md`](bounded-contexts.md) | 4 contextos + 1 kernel |
-| [`domain-events.md`](domain-events.md) | 12 eventos mapeados para 6 ações de auditoria |
-| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md) | Aceitas |
-| [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | Completa — 10 requisitos, 10 tarefas |
-| [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | Completa — 13 requisitos, 13 tarefas |
-| Fatias 2 a 5 | Não especificadas |
+| [`domain-events.md`](domain-events.md) | 12 eventos mapeados para 6 ações; os 5 do Cadastro confirmados pela spec 003 |
+| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md), [0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md) | Aceitas |
+| [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | **Implementada** — 10 requisitos, 10 tarefas |
+| [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | **Implementada** — 13 requisitos, 13 tarefas |
+| [`specs/003-cadastro-de-beneficiario/`](../specs/003-cadastro-de-beneficiario/spec.md) | Especificada — 21 requisitos, 16 tarefas |
+| Fatias 3 a 5 | Não especificadas |
 
-**Fatia 1 pronta para implementação.** 23 requisitos, 23 tarefas, um único `[GREENFIELD]`.
+**Fatia 1 implementada.** 106 testes, 94% de cobertura de linha.
+
+**Fatia 2 pronta para implementação.** 21 requisitos, 16 tarefas, um `[GREENFIELD]`, dez correções de nível `C` e três preservações sinalizadas.
 
 ---
 
