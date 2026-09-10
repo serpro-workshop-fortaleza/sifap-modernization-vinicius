@@ -62,4 +62,29 @@ class ArchitectureTest {
                     .should()
                     .resideOutsideOfPackages("..internal..")
                     .because("o modelo de persistencia de um contexto nao atravessa sua fronteira");
+
+    @ArchTest
+    static final ArchRule cadastro_nao_expoe_seu_pacote_interno =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage("br.gov.sifap.beneficiary..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("br.gov.sifap.beneficiary.internal..")
+                    .because("o cadastro e alcancado por BeneficiaryQuery, pelos comandos e pelos "
+                            + "eventos publicados, nunca pelo agregado nem pelo repositorio");
+
+    @ArchTest
+    static final ArchRule cadastro_nao_conhece_os_demais_contextos =
+            noClasses()
+                    .that()
+                    .resideInAPackage("br.gov.sifap.beneficiary..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "br.gov.sifap.audit..",
+                            "br.gov.sifap.socialprogram..",
+                            "br.gov.sifap.payment..")
+                    .because("o cadastro publica AuditableEvent e nao conhece quem o consome; "
+                            + "conhecer a auditoria recriaria o acoplamento do PERFORM WRITE-AUDIT");
 }
