@@ -63,10 +63,14 @@ O legado não tem esse evento — a mudança de situação é indistinguível de
 | Evento | Quando ocorre | Payload adicional | Origem no legado |
 |---|---|---|---|
 | `SocialProgramRegistered` | Inclusão de programa social | Código, tipo, valor base | `CADPROG.NSP:139` |
+| `SocialProgramUpdated` | Alteração de parâmetros | Código, `changes` | `[NOVO]` — operação inexistente no legado |
+| `SocialProgramStatusChanged` | Inativação ou encerramento | Código, situação anterior e nova, motivo | `[NOVO]` — operação inexistente no legado |
 
-**Um único evento.** O `CADPROG` só implementa inclusão e consulta (`:84-87`); não existe alteração nem encerramento de programa social no legado.
+**Dois eventos que o legado não tem.** O `CADPROG` implementa apenas inclusão e consulta (`:84-87`), de modo que um reajuste anual — razão de existir de um catálogo de parametrização — não tem caminho no sistema. Os requisitos `REQ-PRG-006` e `REQ-PRG-007` criam as duas operações, e a [spec 004](../specs/004-catalogo-de-programas-sociais/spec.md) as especifica.
 
-O `SIFAP-M-... ` correspondente registra a lacuna: `SOCPROG.ddm:37` prevê situação `INATIVO` e `ENCERRADO`, e nenhum programa as atribui. Se a Fatia 3 decidir implementar o encerramento, o evento `SocialProgramClosed` entra aqui.
+O `SOCPROG.ddm:37` prevê situação `INATIVO` e `ENCERRADO` desde 1997, e `CADPROG.NSP:134` grava `A` sempre. A regra que recusa elegibilidade por programa inativo existe em `VALELEG.NSN:114-118` e nunca é acionada.
+
+**Nenhum destes eventos carrega CPF afetado.** `CADPROG.NSP:144` faz `RESET #AUD-CPF`: o evento não tem sujeito pessoal, por não ser sobre pessoa. O enquadramento é preservado, e a trilha já o comporta — `subjectCpf()` é `Optional` desde a Fatia 1.
 
 ---
 
@@ -98,6 +102,8 @@ O `REQ-AUD-008` exige códigos de ação não ambíguos. O legado colapsa três 
 | `BeneficiaryStatusChanged` | `ALTERACAO` | `audit_change_event` |
 | `DependentAdded` | `ALTERACAO` | `audit_change_event` |
 | `SocialProgramRegistered` | `INCLUSAO` | `audit_change_event` |
+| `SocialProgramUpdated` | `ALTERACAO` | `audit_change_event` |
+| `SocialProgramStatusChanged` | `ALTERACAO` | `audit_change_event` |
 | `PaymentGenerated` | `INCLUSAO` | `audit_change_event` |
 | `PaymentDiscountsApplied` | `ALTERACAO` | `audit_change_event` |
 | `PaymentCorrected` | `ALTERACAO` | `audit_change_event` |
@@ -144,8 +150,10 @@ O `REQ-AUD-008` exige códigos de ação não ambíguos. O legado colapsa três 
 | Contexto | Situação dos eventos |
 |---|---|
 | Cadastro de Beneficiário | **Confirmados** pela [spec 003](../specs/003-cadastro-de-beneficiario/spec.md), sem alteração de forma |
-| Catálogo de Programas Sociais | Provisório até a Fatia 3 |
+| Catálogo de Programas Sociais | **Confirmados** pela [spec 004](../specs/004-catalogo-de-programas-sociais/spec.md), com dois eventos acrescentados |
 | Pagamento | Provisório até as fatias 4 e 5 |
+
+O catálogo já exerceu na prática o que prometia: acrescentar evento foi barato, porque o consumidor existe desde a Fatia 1 e não precisou ser tocado.
 
 O que **não** muda: a forma do evento, o `Actor` obrigatório, a publicação dentro da transação e o roteamento para uma das duas tabelas. É isso que a Fatia 1 implementou e que a Fatia 2 exerce pela primeira vez como publicadora.
 

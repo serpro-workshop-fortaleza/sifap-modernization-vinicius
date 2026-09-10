@@ -139,16 +139,19 @@ Descoberta durante a elaboração do [`plan.md`](../specs/001-validacao-de-docum
 | Artefato | Situação |
 |---|---|
 | [`bounded-contexts.md`](bounded-contexts.md) | 4 contextos + 1 kernel |
-| [`domain-events.md`](domain-events.md) | 12 eventos mapeados para 6 ações; os 5 do Cadastro confirmados pela spec 003 |
-| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md), [0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md) | Aceitas |
+| [`domain-events.md`](domain-events.md) | 14 eventos; Cadastro e Catálogo confirmados |
+| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md), [0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md), [0007](../docs/adr/0007-parametrizacao-do-programa-social.md) | Aceitas |
 | [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | **Implementada** — 10 requisitos, 10 tarefas |
 | [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | **Implementada** — 13 requisitos, 13 tarefas |
-| [`specs/003-cadastro-de-beneficiario/`](../specs/003-cadastro-de-beneficiario/spec.md) | Especificada — 21 requisitos, 16 tarefas |
-| Fatias 3 a 5 | Não especificadas |
+| [`specs/003-cadastro-de-beneficiario/`](../specs/003-cadastro-de-beneficiario/spec.md) | **Implementada** — 21 requisitos, 16 tarefas |
+| [`specs/004-catalogo-de-programas-sociais/`](../specs/004-catalogo-de-programas-sociais/spec.md) | Especificada — 15 requisitos, 16 tarefas |
+| Fatias 4 e 5 | Não especificadas |
 
-**Fatia 1 implementada.** 106 testes, 94% de cobertura de linha.
+**Fatias 1 e 2 implementadas.** 171 testes, 92% de cobertura de linha.
 
-**Fatia 2 pronta para implementação.** 21 requisitos, 16 tarefas, um `[GREENFIELD]`, dez correções de nível `C` e três preservações sinalizadas.
+**Fatia 3 pronta para implementação.** 15 requisitos, 16 tarefas, nenhum `[GREENFIELD]`, dez correções de nível `C`.
+
+> A Fatia 3 é a de maior proporção de correções, e a razão é que quase todo achado dela é **ausência**: validação que não existe, operação que não existe, campo que ninguém preenche. Ausência não se preserva.
 
 ---
 
