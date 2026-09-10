@@ -61,7 +61,7 @@ SE o CPF, o nome, a data de nascimento ou o sexo não forem informados, ENTÃO o
 - AC-002.1: Dado um cadastro sem nome, Quando incluído, Então a operação é recusada.
 - AC-002.2: Dado um cadastro com sexo diferente de `M` ou `F`, Quando incluído, Então a operação é recusada.
 
-> O dicionário admite `I` para sexo indefinido (`BENEFIC.ddm:45`) e o programa não. A divergência é tratada no `REQ-BEN-018`.
+> O dicionário admite `I` para sexo indefinido (`BENEFIC.ddm:45`) e o programa não aceita. A entrada preserva a restrição do programa; o domínio real dos dados é medido pelo `REQ-BEN-021`.
 
 ### REQ-BEN-003 — Impedir a gravação quando a validação cadastral falhar
 

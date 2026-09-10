@@ -283,6 +283,20 @@ A mesma da Fatia 1, e vale repetir: **não há ambiente legado disponível**. Os
 
 ---
 
+## Ajustes durante a implementação
+
+Três pontos divergem do desenho acima. Todos apareceram por execução, não por revisão.
+
+| Decidido no plano | Implementado | Razão |
+|---|---|---|
+| `BeneficiaryQuery` como leitura | Transação de escrita, sem `readOnly` | **Auditar consulta transforma leitura em escrita.** O `REQ-BEN-016` grava um evento de acesso, e uma transação somente leitura não executa `nextval` da sequência da trilha. O legado faz o mesmo, com `END TRANSACTION` em `CONSBENF.NSP:179`. É exatamente o custo que motivou a `PORT. CGTI 213/2010`; a resposta é isolar o registro em tabela própria, não deixar de registrar. |
+| `birth_date NOT NULL` | Anulável para registro migrado | O campo é `N8` no Adabas e pode conter zeros ou data impossível. Com `NOT NULL`, a carga teria de recusar a linha — e o `AC-020.3` proíbe descartar beneficiário. Mesma razão já aceita para `status`. |
+| — | `NIS_DUPLICADO` acrescentado | O dicionário declara `AM NUM-NIS` como único (`BENEFIC.ddm:52`). Se a origem trouxer repetição, o registro entra sem o documento e sinalizado, em vez de derrubar a carga inteira por violação de restrição. |
+
+Uma consequência de tipo que veio de graça: `LocalDate` torna impossível representar 29 de fevereiro em ano não bissexto, que `VALBENEF.NSN:110` e `LDASIFAP.NSL:76-81` aceitam desde 1997 por decisão registrada no ticket 3120. A correção não custou linha de código, mas é uma divergência real com o legado.
+
+---
+
 ## Definição de pronto
 
 - [x] Estrutura de pacote definida e alinhada ao mapa de contextos.
