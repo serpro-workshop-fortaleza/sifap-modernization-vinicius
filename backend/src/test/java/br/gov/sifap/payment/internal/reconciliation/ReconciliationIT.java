@@ -79,6 +79,12 @@ class ReconciliationIT extends AbstractIntegrationTest {
     @BeforeEach
     void prepare() {
         new PaymentPartitionMaintenance(jdbcTemplate, Clock.systemUTC()).ensurePartition(PERIOD);
+
+        // O container e compartilhado e o periodo e o mesmo em toda a classe.
+        jdbcTemplate.update("DELETE FROM reconciliation_issue");
+        jdbcTemplate.update("DELETE FROM reconciliation_file");
+        jdbcTemplate.update("DELETE FROM payment WHERE reference_period = ?", PERIOD);
+
         programCode = String.valueOf(PROGRAM_SEQUENCE.incrementAndGet());
 
         programs.register(
@@ -319,5 +325,58 @@ class ReconciliationIT extends AbstractIntegrationTest {
         return jdbcTemplate.queryForObject(
                 "SELECT cpf FROM payment WHERE reference_period = ? ORDER BY id DESC LIMIT 1",
                 String.class, PERIOD);
+    }
+
+    /**
+     * {@code REQ-REC-015}. O bloco confirmado sobrevive a falha, e a retomada nao reaplica
+     * o que ja foi conciliado porque a marca esta no proprio pagamento.
+     */
+    @Test
+    @DisplayName("deve retomar sem reaplicar quando o ciclo anterior foi interrompido")
+    void deve_retomar_sem_reaplicar_quando_o_ciclo_anterior_foi_interrompido() {
+        List<PaymentView> payments = payrollAndRemittance(2);
+        List<String> lines = payments.stream()
+                .map(payment -> line(unmasked(payment), payment.paymentId(),
+                        cents(payment.amountNet()), "00"))
+                .toList();
+
+        ReconciliationResult first = reconciliationService.reconcile(
+                "RET202504.TXT", PERIOD, lines, PROCESS);
+        assertThat(first.reconciled()).isEqualTo(2);
+
+        // Simula a retomada devolvendo o arquivo ao estado interrompido.
+        jdbcTemplate.update(
+                "UPDATE reconciliation_file SET status = 'INTERROMPIDO' WHERE sha256 = ?",
+                first.fileSha256());
+
+        ReconciliationResult resumed = reconciliationService.reconcile(
+                "RET202504.TXT", PERIOD, lines, PROCESS);
+
+        assertThat(resumed.reconciled()).isZero();
+        assertThat(resumed.alreadyReconciled()).isEqualTo(2);
+        assertThat(resumed.recordsRead()).isEqualTo(2);
+    }
+
+    /** {@code AC-009.2}: listar os divergentes sem varrer a trilha de auditoria. */
+    @Test
+    @DisplayName("deve listar os divergentes do periodo quando consultados")
+    void deve_listar_os_divergentes_do_periodo_quando_consultados() {
+        List<PaymentView> payments = payrollAndRemittance(2);
+        PaymentView divergentPayment = payments.get(0);
+        PaymentView okPayment = payments.get(1);
+
+        reconciliationService.reconcile(
+                "RET202504.TXT", PERIOD,
+                List.of(
+                        line(unmasked(divergentPayment), divergentPayment.paymentId(),
+                                cents(divergentPayment.amountNet().subtract(new BigDecimal("30.00"))), "00"),
+                        line(unmasked(okPayment), okPayment.paymentId(),
+                                cents(okPayment.amountNet()), "00")),
+                PROCESS);
+
+        List<PaymentView> divergents = paymentQuery.findDivergent(PERIOD, OPERATOR);
+
+        assertThat(divergents).hasSize(1);
+        assertThat(divergents.get(0).reconciliationStatus()).contains(ReconciliationStatus.DIVERGENTE);
     }
 }

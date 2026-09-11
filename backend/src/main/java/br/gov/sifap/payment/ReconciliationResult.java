@@ -19,6 +19,7 @@ public record ReconciliationResult(
         int recordsRead,
         int skipped,
         int reconciled,
+        int alreadyReconciled,
         int withinTolerance,
         int divergent,
         int pending,

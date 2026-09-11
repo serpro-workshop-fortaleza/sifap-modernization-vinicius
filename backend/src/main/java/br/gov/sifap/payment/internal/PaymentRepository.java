@@ -1,5 +1,6 @@
 package br.gov.sifap.payment.internal;
 
+import br.gov.sifap.payment.ReconciliationStatus;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
@@ -33,4 +34,8 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     List<Payment> findByReferencePeriodOrderByCpf(String referencePeriod);
 
     List<Payment> findByCpfOrderByReferencePeriodDesc(String cpf);
+
+    /** Apoia {@code AC-009.2}; usa o indice parcial de {@code idx_payment_reconciliation}. */
+    List<Payment> findByReferencePeriodAndReconciliationStatusOrderByCpf(
+            String referencePeriod, ReconciliationStatus reconciliationStatus);
 }

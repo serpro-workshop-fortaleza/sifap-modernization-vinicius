@@ -17,6 +17,7 @@ final class ReconciliationTally {
     private int read;
     private int skipped;
     private int reconciled;
+    private int alreadyReconciled;
     private int withinTolerance;
     private int divergent;
     private int pending;
@@ -28,6 +29,11 @@ final class ReconciliationTally {
 
     void recordSkipped() {
         skipped++;
+    }
+
+    /** {@code REQ-REC-015}: encontrado na retomada, ja conciliado em execucao anterior. */
+    void recordAlreadyReconciled() {
+        alreadyReconciled++;
     }
 
     void recordReconciled(BigDecimal bankAmount) {
@@ -62,6 +68,10 @@ final class ReconciliationTally {
 
     int reconciled() {
         return reconciled;
+    }
+
+    int alreadyReconciled() {
+        return alreadyReconciled;
     }
 
     int withinTolerance() {

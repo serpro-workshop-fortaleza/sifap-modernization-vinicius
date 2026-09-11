@@ -2,6 +2,7 @@ package br.gov.sifap.payment.internal;
 
 import br.gov.sifap.payment.PaymentQuery;
 import br.gov.sifap.payment.PaymentView;
+import br.gov.sifap.payment.ReconciliationStatus;
 import br.gov.sifap.payment.event.PaymentQueried;
 import br.gov.sifap.shared.document.Cpf;
 import br.gov.sifap.shared.event.Actor;
@@ -51,6 +52,19 @@ class PaymentQueryImpl implements PaymentQuery {
             return List.of();
         }
         register(cpf.value(), "extrato de pagamentos", actor);
+        return found.stream()
+                .map(payment -> PaymentMapper.toView(payment, discounts.findByPaymentId(payment.id())))
+                .toList();
+    }
+
+    @Override
+    public List<PaymentView> findDivergent(String referencePeriod, Actor actor) {
+        List<Payment> found = payments.findByReferencePeriodAndReconciliationStatusOrderByCpf(
+                referencePeriod, ReconciliationStatus.DIVERGENTE);
+
+        // Consulta de apuracao, e nao de titular: o registro de acesso e por pagamento.
+        found.forEach(payment -> register(payment.cpf(), "apuracao de divergencias", actor));
+
         return found.stream()
                 .map(payment -> PaymentMapper.toView(payment, discounts.findByPaymentId(payment.id())))
                 .toList();
