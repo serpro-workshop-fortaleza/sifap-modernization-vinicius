@@ -89,6 +89,9 @@ O `SOCPROG.ddm:37` prevê situação `INATIVO` e `ENCERRADO` desde 1997, e `CADP
 
 **`PaymentDiscountsApplied` e `PaymentCorrected` são os eventos que o legado não tem.** `CALCDSCT` e `CALCCORR` alteram valores financeiros sem qualquer registro. São a correção direta das regras 80 e 95.
 
+> [!NOTE]
+> **Correção de leitura, feita na Fatia 4.** O `CALCCORR.NSP:243` **inclui** o copycode de auditoria: a correção retroativa é registrada no legado. Quem não registra é o `CALCDSCT`, que não tem `INCLUDE CCAUDIT`, e o `CALCBENF`, que grava o pagamento sem auditar. O `PaymentCorrected` preserva um comportamento existente; o `PaymentDiscountsApplied` corrige uma ausência.
+
 ---
 
 ## Mapeamento para ação de auditoria
@@ -151,7 +154,7 @@ O `REQ-AUD-008` exige códigos de ação não ambíguos. O legado colapsa três 
 |---|---|
 | Cadastro de Beneficiário | **Confirmados** pela [spec 003](../specs/003-cadastro-de-beneficiario/spec.md), sem alteração de forma |
 | Catálogo de Programas Sociais | **Confirmados** pela [spec 004](../specs/004-catalogo-de-programas-sociais/spec.md), com dois eventos acrescentados |
-| Pagamento | Provisório até as fatias 4 e 5 |
+| Pagamento | **Confirmados** pela [spec 005](../specs/005-processamento-de-folha/spec.md) quanto à geração, desconto e correção; a conciliação fica para a Fatia 5 |
 
 O catálogo já exerceu na prática o que prometia: acrescentar evento foi barato, porque o consumidor existe desde a Fatia 1 e não precisou ser tocado.
 

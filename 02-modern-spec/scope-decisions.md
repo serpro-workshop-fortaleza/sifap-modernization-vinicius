@@ -139,19 +139,20 @@ Descoberta durante a elaboração do [`plan.md`](../specs/001-validacao-de-docum
 | Artefato | Situação |
 |---|---|
 | [`bounded-contexts.md`](bounded-contexts.md) | 4 contextos + 1 kernel |
-| [`domain-events.md`](domain-events.md) | 14 eventos; Cadastro e Catálogo confirmados |
-| [ADR-0003](../docs/adr/0003-preservacao-de-comportamento.md), [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md), [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md), [0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md), [0007](../docs/adr/0007-parametrizacao-do-programa-social.md) | Aceitas |
-| [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | **Implementada** — 10 requisitos, 10 tarefas |
-| [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | **Implementada** — 13 requisitos, 13 tarefas |
-| [`specs/003-cadastro-de-beneficiario/`](../specs/003-cadastro-de-beneficiario/spec.md) | **Implementada** — 21 requisitos, 16 tarefas |
-| [`specs/004-catalogo-de-programas-sociais/`](../specs/004-catalogo-de-programas-sociais/spec.md) | Especificada — 15 requisitos, 16 tarefas |
-| Fatias 4 e 5 | Não especificadas |
+| [`domain-events.md`](domain-events.md) | 14 eventos; Cadastro, Catálogo e Pagamento confirmados |
+| ADR [0003](../docs/adr/0003-preservacao-de-comportamento.md) · [0004](../docs/adr/0004-mapeamento-dependentes-jpa.md) · [0005](../docs/adr/0005-rotina-unica-validacao-cpf.md) · [0006](../docs/adr/0006-situacao-cadastral-do-beneficiario.md) · [0007](../docs/adr/0007-parametrizacao-do-programa-social.md) · [0008](../docs/adr/0008-calculo-do-beneficio.md) | Aceitas |
+| [`specs/001-validacao-de-documentos/`](../specs/001-validacao-de-documentos/spec.md) | **Implementada** — 10 requisitos |
+| [`specs/002-trilha-de-auditoria/`](../specs/002-trilha-de-auditoria/spec.md) | **Implementada** — 13 requisitos |
+| [`specs/003-cadastro-de-beneficiario/`](../specs/003-cadastro-de-beneficiario/spec.md) | **Implementada** — 21 requisitos |
+| [`specs/004-catalogo-de-programas-sociais/`](../specs/004-catalogo-de-programas-sociais/spec.md) | **Implementada** — 15 requisitos |
+| [`specs/005-processamento-de-folha/`](../specs/005-processamento-de-folha/spec.md) | Especificada — 25 requisitos, 18 tarefas |
+| Fatia 5 | Não especificada |
 
-**Fatias 1 e 2 implementadas.** 171 testes, 92% de cobertura de linha.
+**Fatias 1 a 3 implementadas.** 231 testes, 92% de cobertura de linha.
 
-**Fatia 3 pronta para implementação.** 15 requisitos, 16 tarefas, nenhum `[GREENFIELD]`, dez correções de nível `C`.
+**Fatia 4 pronta para implementação.** 25 requisitos, 18 tarefas, nenhum `[GREENFIELD]`, treze correções e três preservações sinalizadas.
 
-> A Fatia 3 é a de maior proporção de correções, e a razão é que quase todo achado dela é **ausência**: validação que não existe, operação que não existe, campo que ninguém preenche. Ausência não se preserva.
+> É a fatia que decide quanto cada pessoa recebe. Todas as decisões que alteram valor pago — fórmula, contribuição, faixa de renda, região especial, índice de correção, truncamento — estão em `P` ou `PS`. Os dois casos de fronteira estão registrados no [ADR-0008](../docs/adr/0008-calculo-do-beneficio.md).
 
 ---
 
