@@ -5,6 +5,7 @@ import br.gov.sifap.payment.DiscountType;
 import br.gov.sifap.payment.FactorType;
 import br.gov.sifap.payment.PaymentStatus;
 import br.gov.sifap.payment.PaymentType;
+import br.gov.sifap.payment.ReconciliationStatus;
 import br.gov.sifap.payment.internal.calculation.MonetaryScale;
 import br.gov.sifap.shared.event.Actor;
 import br.gov.sifap.shared.exception.DomainRuleException;
@@ -105,6 +106,26 @@ public class Payment {
 
     @Column(name = "corrected_at")
     private LocalDate correctedAt;
+
+    /** {@code PAYMENT.ddm:95}, declarado com dominio fixo e nunca gravado pelo legado. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reconciliation_status", length = 12)
+    private ReconciliationStatus reconciliationStatus;
+
+    @Column(name = "amount_reconciled", precision = 11, scale = 2)
+    private BigDecimal amountReconciled;
+
+    @Column(name = "bank_code", length = 3)
+    private String bankCode;
+
+    @Column(name = "bank_return_code", length = 2)
+    private String bankReturnCode;
+
+    @Column(name = "credit_date")
+    private LocalDate creditDate;
+
+    @Column(name = "reconciled_at")
+    private Instant reconciledAt;
 
     @Column(name = "generated_at", nullable = false, updatable = false)
     private Instant generatedAt;
@@ -260,6 +281,94 @@ public class Payment {
 
     public boolean hasDiscountOf(DiscountType type) {
         return discounts.stream().anyMatch(discount -> discount.type() == type);
+    }
+
+    // ------------------------------------------------------------ conciliacao
+
+    /**
+     * Confirma o credito informado pelo banco.
+     *
+     * <p>Atende {@code REQ-REC-007}, {@code REQ-REC-011} e {@code REQ-REC-016}.
+     */
+    public void confirmCredit(
+            BigDecimal bankAmount, LocalDate creditDate, String bankCode, String returnCode, Clock clock) {
+        requireBankReturnAllowed(returnCode);
+
+        this.status = PaymentStatus.CONFIRMADO;
+        this.reconciliationStatus = ReconciliationStatus.CONCILIADO;
+        this.amountReconciled = bankAmount;
+        this.creditDate = creditDate;
+        this.bankCode = bankCode;
+        this.bankReturnCode = returnCode;
+        this.reconciledAt = clock.instant();
+    }
+
+    public void markReturned(BigDecimal bankAmount, String bankCode, String returnCode, Clock clock) {
+        requireBankReturnAllowed(returnCode);
+
+        this.status = PaymentStatus.DEVOLVIDO;
+        this.reconciliationStatus = ReconciliationStatus.CONCILIADO;
+        this.amountReconciled = bankAmount;
+        this.bankCode = bankCode;
+        this.bankReturnCode = returnCode;
+        this.reconciledAt = clock.instant();
+    }
+
+    public void markReversed(BigDecimal bankAmount, String bankCode, String returnCode, Clock clock) {
+        requireBankReturnAllowed(returnCode);
+
+        this.status = PaymentStatus.REPROCESSADO;
+        this.reconciliationStatus = ReconciliationStatus.CONCILIADO;
+        this.amountReconciled = bankAmount;
+        this.bankCode = bankCode;
+        this.bankReturnCode = returnCode;
+        this.reconciledAt = clock.instant();
+    }
+
+    /**
+     * Registra a divergencia de valor preservando a situacao do pagamento.
+     *
+     * <p>Atende {@code REQ-REC-009}. A situacao de conciliacao e ortogonal a do pagamento:
+     * {@code STAT-PAYMENT} diz o que aconteceu com o pagamento e {@code STAT-RECONCIL} diz
+     * o que aconteceu com a conferencia. O legado so tem a primeira, e por isso a
+     * divergencia de {@code BATCHCON.NSP:192-201} nao deixa marca nenhuma no registro.
+     */
+    public void markDivergent(BigDecimal bankAmount, String bankCode, String returnCode, Clock clock) {
+        requireBankReturnAllowed(returnCode);
+
+        this.reconciliationStatus = ReconciliationStatus.DIVERGENTE;
+        this.amountReconciled = bankAmount;
+        this.bankCode = bankCode;
+        this.bankReturnCode = returnCode;
+        this.reconciledAt = clock.instant();
+    }
+
+    private void requireBankReturnAllowed(String returnCode) {
+        if (!status.acceptsBankReturn()) {
+            throw new DomainRuleException(
+                    "REQ-REC-011",
+                    "pagamento em situacao " + status + " nao admite retorno bancario " + returnCode);
+        }
+    }
+
+    public Optional<ReconciliationStatus> reconciliationStatus() {
+        return Optional.ofNullable(reconciliationStatus);
+    }
+
+    public Optional<BigDecimal> amountReconciled() {
+        return Optional.ofNullable(amountReconciled);
+    }
+
+    public Optional<LocalDate> creditDate() {
+        return Optional.ofNullable(creditDate);
+    }
+
+    public Optional<String> bankCode() {
+        return Optional.ofNullable(bankCode);
+    }
+
+    public Optional<String> bankReturnCode() {
+        return Optional.ofNullable(bankReturnCode);
     }
 
     public Long id() {

@@ -35,4 +35,15 @@ public enum PaymentStatus {
         }
         return Optional.empty();
     }
+
+    /**
+     * Situacao que admite retorno do banco.
+     *
+     * <p>Atende {@code REQ-REC-011}. Somente o pagamento remetido pode receber retorno:
+     * {@code BATCHCON.NSP:205-213} grava a nova situacao sem consultar a anterior, de modo
+     * que um retorno atrasado sobrescreve um cancelamento.
+     */
+    public boolean acceptsBankReturn() {
+        return this == EMITIDO;
+    }
 }

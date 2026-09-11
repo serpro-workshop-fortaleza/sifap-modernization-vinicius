@@ -199,3 +199,46 @@ O `AuditAction.CONCILIACAO` já existe desde a Fatia 1 e resolve o `REQ-REC-013`
 - [x] Contrato de comunicação especificado.
 - [x] Riscos identificados com mitigação.
 - [x] Tarefas geradas em [`tasks.md`](tasks.md).
+
+---
+
+## Ajustes durante a implementação
+
+O que a execução revelou e o planejamento não previa.
+
+### 1. Transação única no ciclo torna o `REQ-REC-015` inatendível
+
+O plano dizia que o arquivo de retorno cabe em uma transação, porque a operação por registro é uma atualização pontual. Escrever o teste de retomada mostrou o erro: com `@Transactional` no ciclo inteiro, uma falha desfaz **também o registro do arquivo**, e a retomada não tem de onde partir.
+
+Duas peças resolveram. `ReconciliationFileRegistry` abre, conclui e interrompe o arquivo em `REQUIRES_NEW`, de modo que o registro sobrevive ao que acontecer com o processamento. `ReconciliationBlockProcessor` aplica os registros em blocos transacionais, como `PayrollBlockProcessor` faz na folha.
+
+O legado tem o problema inverso e igualmente ruim: `BATCHCON` confirma cada registro individualmente e, quando falha, `BACKOUT TRANSACTION` desfaz só o último — tudo antes permanece, e nada registra onde parou.
+
+### 2. O identificador de execução não cabe no que a trilha aceita
+
+`batch_run_id` e `entity_id` da trilha são `VARCHAR(50)`, definidos na Fatia 1. O SHA-256 em hexadecimal tem 64 caracteres.
+
+Ampliar a coluna significaria `ALTER TABLE` em tabela particionada declarada imutável. A alternativa adotada é um identificador curto, `REC-{id}`, com o resumo no payload do evento de encerramento. O `runId` também passou a fazer parte do `ReconciliationResult`, porque sem ele o chamador não consegue localizar a execução na trilha.
+
+### 3. `CHAR(64)` volta a ser `bpchar`
+
+Terceira ocorrência da mesma lição, agora na coluna do resumo. O PostgreSQL reporta `CHAR(n)` como `bpchar` e a validação de schema do Hibernate recusa contra `String`. Toda coluna de texto de largura fixa neste projeto é `VARCHAR`.
+
+### 4. A carga do histórico é apuração, não migração
+
+O plano tratava a conciliação histórica como carga. Não é: os campos nunca foram gravados, então não há dado de origem a transformar. `ReconciliationHistoryLoader` faz um inventário — quantos pagamentos jamais passaram por conferência registrada, quantos duplicados têm vencedor determinável pelo crédito bancário e quantos permanecem ambíguos.
+
+Usa consulta direta em vez de carregar agregados, pela mesma razão que os relatórios agregam no banco: contar milhões de linhas em memória troca um problema de consulta por um de heap.
+
+### 5. O crédito sem situação de conciliação é um estado que só a migração revela
+
+Apareceu ao escrever a consulta de inventário. `BATCHCON.NSP:209` grava `DT-CREDIT` e nunca toca `STAT-RECONCIL`, porque o campo não é gravado por programa nenhum. O resultado é um pagamento com data de crédito e sem marca de conferência — visível apenas agora, e contado em `statusOutOfDomain`.
+
+### Verificação
+
+| Medida | Resultado |
+|---|---|
+| Testes | 115, todos verdes |
+| Cobertura de linhas | 90,0% (portão: 60%) |
+| Regras ArchUnit | 12, incluindo a fronteira da conciliação |
+| Requisitos cobertos | `REQ-REC-001` a `REQ-REC-016` |

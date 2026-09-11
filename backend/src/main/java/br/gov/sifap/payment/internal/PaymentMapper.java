@@ -32,6 +32,10 @@ final class PaymentMapper {
                 payment.amountCorrection(),
                 payment.correctionIndex(),
                 payment.correctedAt(),
+                payment.reconciliationStatus(),
+                payment.amountReconciled(),
+                payment.creditDate(),
+                payment.bankCode(),
                 factorsOf(payment.appliedFactors()),
                 discountsOf(discounts));
     }
