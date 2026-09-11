@@ -305,3 +305,52 @@ O alvo é 3,8 milhões de pagamentos em 4 horas — 264 por segundo. O teste usa
 - [x] Contrato de comunicação especificado, com os quatro eventos confirmados.
 - [x] Riscos identificados com mitigação.
 - [x] Tarefas geradas em [`tasks.md`](tasks.md).
+
+---
+
+## Ajustes durante a implementação
+
+O que a execução revelou e o planejamento não previa.
+
+### 1. A folha precisa de uma porta de leitura própria no Cadastro
+
+`BeneficiaryQuery` exige `Actor` e publica `BeneficiaryQueried` a cada consulta — foi assim que a Fatia 2 resolveu o `REQ-BEN-016`. Usar essa interface na folha produziria 3,8 milhões de eventos de acesso por ciclo, o mesmo problema de volume que a `PORT. CGTI 213/2010` usou para justificar não auditar consultas.
+
+Criou-se `BeneficiaryPayrollFeed`, com paginação por CPF e sem evento por registro. A prestação de contas do lote vem do `PayrollCycleCompleted`, com `batchRunId`, e a de cada valor vem do `PaymentGenerated`. A paginação é por cursor de CPF, e não por `OFFSET`, porque `BATCHPGT.NSP:189` lê com `READ LOGICAL BY CPF` e retomar de um CPF conhecido sobrevive a inclusões concorrentes.
+
+### 2. Publicar evento fora de transação é publicar no vazio
+
+`PayrollCycleService` não é `@Transactional` — nenhuma transação sobrevive à janela de quatro horas. Consequência não prevista: `AuditEventListener` é `@TransactionalEventListener(BEFORE_COMMIT)`, e sem transação ativa o evento de conclusão do ciclo era descartado em silêncio.
+
+Introduziu-se `PayrollEventRecorder`, que abre uma transação própria apenas para registrar. O sintoma era exatamente o que o `REQ-AUD-010` existe para eliminar: a folha termina e não há registro de que terminou.
+
+### 3. A contribuição social precisou de coluna própria
+
+A restrição `ck_payment_net_consistent` exige `amount_net = amount_gross - amount_discount`. Mas a contribuição social é calculada na geração (`CALCBENF.NSN:344-350`) e os demais descontos chegam depois (`CALCDSCT`). Somar tudo em `amount_discount` sem separar tornaria impossível responder qual das duas contribuições sociais do legado (`SIFAP-M-10`) incidiu sobre um pagamento.
+
+Acrescentou-se `amount_social`. O total continua sendo a soma, e a restrição continua valendo.
+
+### 4. O teto de desconto é uma decisão de agregado, não de laço
+
+`CALCDSCT.NSP:170-175` corta `#AMT-TOTAL-DISC` dentro do laço. Como o acumulador soma todos os tipos, um desconto comum processado depois de um judicial reduz o judicial — que a linha `:132` declara isento. `DiscountCap` soma os isentos fora do teto e aplica o limite apenas ao restante: o resultado deixa de depender da ordem de processamento.
+
+### 5. A aplicação não cria partição, mas recusa a folha sem ela
+
+Criar partição é DDL, e a role da aplicação tem apenas `SELECT`, `INSERT` e `UPDATE` — a mesma decisão da Fatia 1. `PaymentPartitionGuard` verifica a existência antes do primeiro bloco e falha com motivo legível, em vez de estourar no meio da gravação com `no partition of relation found for row`.
+
+### 6. Colunas de período são `VARCHAR(6)`, não `CHAR(6)`
+
+O PostgreSQL reporta `CHAR` como `bpchar` e a validação de schema do Hibernate recusa. Mesma lição da Fatia 2, agora na direção oposta: lá o `CHAR(1)` foi adotado para casar com `length = 1`; aqui o `VARCHAR(6)` foi adotado para casar com o padrão de `String`. A ordenação lexicográfica do `RANGE` continua correta porque todo período tem seis dígitos.
+
+### 7. O duplicado do histórico não é escolhido pela carga
+
+`uq_payment_cpf_period` impede a segunda ocorrência. Decidir qual vale exige a conciliação bancária, que é da Fatia 5. `PaymentLoader` migra o primeiro, conta os demais em `duplicatedInPeriod` e devolve `noPaymentDiscarded() == false`. O registro fica visível em vez de silenciosamente escolhido.
+
+### Verificação
+
+| Medida | Resultado |
+|---|---|
+| Testes | 100 unitários + 68 de integração, todos verdes |
+| Cobertura de linhas | 90,9% (portão: 60%) |
+| Vazão medida | acima dos 264 pagamentos/s que a janela legada exige |
+| Regras ArchUnit | 11, incluindo três novas para a fronteira da folha |

@@ -110,4 +110,39 @@ class ArchitectureTest {
                             "br.gov.sifap.beneficiary..",
                             "br.gov.sifap.payment..")
                     .because("o catalogo e escritor unico do seu dado e nao le nenhum outro contexto");
+
+    @ArchTest
+    static final ArchRule folha_nao_expoe_seu_pacote_interno =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage("br.gov.sifap.payment..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("br.gov.sifap.payment.internal..")
+                    .because("a folha e alcancada por PaymentQuery e pela API REST, nunca pelo "
+                            + "agregado nem pelo repositorio");
+
+    @ArchTest
+    static final ArchRule folha_nao_conhece_a_auditoria =
+            noClasses()
+                    .that()
+                    .resideInAPackage("br.gov.sifap.payment..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("br.gov.sifap.audit..")
+                    .because("a folha publica AuditableEvent; conhecer a auditoria repetiria a "
+                            + "omissao de CALCDSCT, que altera valor financeiro sem incluir CCAUDIT");
+
+    @ArchTest
+    static final ArchRule folha_consome_os_demais_contextos_apenas_pelas_interfaces_publicas =
+            noClasses()
+                    .that()
+                    .resideInAPackage("br.gov.sifap.payment..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAnyPackage(
+                            "br.gov.sifap.beneficiary.internal..",
+                            "br.gov.sifap.socialprogram.internal..")
+                    .because("o calculo le o cadastro por BeneficiaryPayrollFeed e o catalogo por "
+                            + "SocialProgramQuery; alcancar o agregado alheio traria o modelo junto");
 }
