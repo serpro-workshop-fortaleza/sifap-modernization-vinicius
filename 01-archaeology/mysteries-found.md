@@ -120,6 +120,23 @@ Os **27 achados bônus** estão identificados com `BONUS` na coluna `ID` das tab
 | Dados e infraestrutura | 0 | 8 |
 | **Total** | **20** | **27** |
 
+### Achados posteriores ao Estágio 1
+
+Questões encontradas **depois** da arqueologia, durante a leitura detalhada que a especificação e a implementação de cada fatia exigem. Ficam em seção própria para não alterar o denominador do Estágio 1: os 20 canônicos e os 27 bônus acima continuam sendo o que se sabia ao fim daquele estágio.
+
+O ID segue o formato `SIFAP-F<fatia>-<sequência>`. Valem as mesmas regras das tabelas anteriores: evidência em `path:line`, hipótese apenas quando a leitura a produziu, e nenhuma linha vira conclusão antes de validação humana.
+
+| ID | Questão em aberto | Evidência (`path:line`) | Impacto | Hipótese (não confirmada) | Pessoa/área responsável | Status |
+|---|---|---|---|---|---|---|
+| `SIFAP-F4-01` | Quantos pagamentos de produção foram calculados com o fator de renda do beneficiário processado imediatamente antes, por a renda superar a última faixa? | `01-archaeology/legacy-sifap/natural-programs/BATCHPGT.NSP:380-412` | A última faixa termina em `9.999,99`. Acima disso o laço de `DET-INCOME-BAND-BATCH` não encontra faixa e `#FACTOR-INCOME` não é reinicializado a cada iteração: o valor do beneficiário anterior permanece. Dois beneficiários com dados idênticos recebem valores diferentes conforme a ordem de leitura do arquivo. | <!-- aguardando: não confirmada --> | SUPDE/DESIF | aberta |
+| `SIFAP-F5-01` | Quantos registros de retorno bancário foram contados como conciliados sem que o pagamento fosse atualizado, por trazerem código de retorno fora do domínio? | `01-archaeology/legacy-sifap/natural-programs/BATCHCON.NSP:203`, `01-archaeology/legacy-sifap/natural-programs/BATCHCON.NSP:237-242` | `ADD 1 TO #QTY-RECONCILED` ocorre antes do `DECIDE` que classifica o código. O ramo `NONE` apenas escreve no log. O resumo de execução declara conciliação sobre registros que nenhum ramo tratou. | <!-- aguardando: não confirmada --> | CGPB | aberta |
+| `SIFAP-F5-02` | Como listar os pagamentos com divergência de valor de um período, se a divergência não deixa marca no próprio pagamento? | `01-archaeology/legacy-sifap/natural-programs/BATCHCON.NSP:192-201`, `01-archaeology/legacy-sifap/natural-programs/BATCHCON.NSP:332-336` | A divergência gera registro de auditoria e mantém o pagamento na situação anterior. A única via de consulta é varrer 418 milhões de eventos da trilha. | <!-- aguardando: não confirmada --> | CGPB | aberta |
+| `SIFAP-F5-03` | Qual banco pagador está registrado nos pagamentos conciliados, se o campo alfanumérico recebe um literal numérico? | `01-archaeology/legacy-sifap/natural-programs/BATCHCON.NSP:212`, `01-archaeology/legacy-sifap/adabas-ddms/PAYMENT.ddm:72` | `MOVE 1 TO PAYMENT-V.COD-BANK` sobre campo `A3` declarado como código FEBRABAN. O código do banco que efetivamente creditou não é preservado. | <!-- aguardando: não confirmada --> | SUPDE/DESIF | aberta |
+| `SIFAP-F5-04` | Desde quando o consolidado mensal por região está agrupando incorretamente, e quem consome esse relatório? | `01-archaeology/legacy-sifap/natural-programs/BATCHREL.NSP:150-170`, `01-archaeology/legacy-sifap/adabas-ddms/BENEFIC.ddm:66` | O domínio de `COD-REGION` é `01`-`05` e `99`; a classificação usa faixas `1-5`, `6-10`, `11-15`, `16-20` e resto. Todos os códigos válidos somam como Norte e o `99` como Centro-Oeste. Relatório distribuído à SENARC desde 1999. | <!-- aguardando: não confirmada --> | SENARC | aguardando validação humana |
+| `SIFAP-F5-05` | Os subtotais por programa do relatório detalhado já foram conferidos contra a base? | `01-archaeology/legacy-sifap/natural-programs/RELPGT.NSP:141-148`, `01-archaeology/legacy-sifap/natural-programs/RELPGT.NSP:120-121` | A quebra manual compara com o valor anterior e pressupõe ordenação por programa; a leitura é ordenada por período. Programas intercalados recebem vários subtotais parciais. | <!-- aguardando: não confirmada --> | CGPB | aberta |
+
+**Sobre os outros dois achados da Fatia 4.** A dupla gravação do `SIFAP-M-05` e o número ausente do `SIFAP-M-08` são o mesmo defeito visto de dois ângulos — o pagamento que `CALCBENF.NSN:319` grava é justamente o que nunca recebe `NUM-PAYMENT`. A aplicação dupla do fator de ajuste já constava como bônus na área Cálculo. Nenhum dos dois abre questão nova; a evidência está em [`specs/005-processamento-de-folha/spec.md`](../specs/005-processamento-de-folha/spec.md).
+
 ---
 
 ## Pendências de semântica da linguagem

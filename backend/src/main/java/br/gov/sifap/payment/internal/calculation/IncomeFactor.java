@@ -8,7 +8,8 @@ import java.util.List;
 /**
  * Multiplicador da faixa de renda.
  *
- * <p>Atende {@code REQ-PAY-012}. E o defeito mais grave encontrado no projeto.
+ * <p>Atende {@code REQ-PAY-012}. E o defeito mais grave encontrado no projeto, registrado
+ * como {@code SIFAP-F4-01}.
  *
  * <p>No {@code BATCHPGT}, {@code DET-INCOME-BAND-BATCH} percorre cinco faixas cuja ultima
  * termina em {@code 9.999,99}. Acima disso nenhuma casa, o laco termina sem atribuir

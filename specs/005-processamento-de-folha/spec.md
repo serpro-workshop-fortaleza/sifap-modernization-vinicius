@@ -196,7 +196,7 @@ O sistema DEVE obter o multiplicador regional dos parâmetros regionais do progr
 O sistema DEVE determinar um fator de renda para qualquer valor de renda declarada.
 
 - source_legacy: 01-archaeology/legacy-sifap/natural-programs/BATCHPGT.NSP#L412
-- nível: `C` — corrigido; renda acima da última faixa não encontra fator
+- nível: `C` — corrigido; decisão do `SIFAP-F4-01`, achado desta leitura
 - AC-012.1: Dada uma renda acima do limite da última faixa, Quando calculada, Então o sistema aplica regra definida, sem herdar valor de outro beneficiário.
 - AC-012.2: Dado um beneficiário processado após outro, Quando calculado, Então nenhum fator do anterior influencia o resultado.
 
@@ -372,7 +372,7 @@ QUANDO o ciclo terminar, o sistema DEVE devolver um código indicando sucesso, e
 | `REQ-PAY-009` | 103 | — | `C` |
 | `REQ-PAY-010` | 72 | `SIFAP-M-09` | `P` |
 | `REQ-PAY-011` | 68 | — | `C` |
-| `REQ-PAY-012` | 69 | — | `C` |
+| `REQ-PAY-012` | 69 | `SIFAP-F4-01` | `C` |
 | `REQ-PAY-013` | 39, 73 | `SIFAP-M-04` | `C` |
 | `REQ-PAY-014` | 74 | — | `P` |
 | `REQ-PAY-015` | 75, 76 | — | `P` |
@@ -399,9 +399,9 @@ Duas correções chegam perto da fronteira e ficam registradas com aviso: o `REQ
 
 O `SIFAP-M-05` e o `SIFAP-M-08` são o mesmo defeito: o pagamento que o `CALCBENF` grava é justamente o que fica sem número.
 
-O fator de ajuste do programa é aplicado duas vezes, com coeficientes diferentes, por programas diferentes.
+O fator de ajuste do programa é aplicado duas vezes, com coeficientes diferentes, por programas diferentes. Já constava como achado bônus da área Cálculo.
 
-No `BATCHPGT`, uma renda acima da última faixa faz o beneficiário herdar o fator de renda do beneficiário processado imediatamente antes dele.
+No `BATCHPGT`, uma renda acima da última faixa faz o beneficiário herdar o fator de renda do beneficiário processado imediatamente antes dele. Sem registro anterior no acervo; consta agora como `SIFAP-F4-01` em [`mysteries-found.md`](../../01-archaeology/mysteries-found.md).
 
 ---
 

@@ -236,7 +236,7 @@ A regra tem exceção: **defeito de integridade não se preserva.** Comportament
 | Inventário | [inventory.md](inventory.md) | 40 arquivos, 11 padrões de nomenclatura, 3 itens estranhos |
 | Regras de Negócio | [business-rules-catalog.md](business-rules-catalog.md) | 175 regras: 14 confirmadas, 62 inferidas, 99 mistérios |
 | Dependências | [dependency-map.md](dependency-map.md) · [.mmd](dependency-map.mmd) | 94 arestas, 0 quebras de código, 7 quebras documentais |
-| Questões em aberto | [mysteries-found.md](mysteries-found.md) | 20 canônicos, 27 bônus, 4 pendências de semântica |
+| Questões em aberto | [mysteries-found.md](mysteries-found.md) | 20 canônicos, 27 bônus, 4 pendências de semântica; achados posteriores em seção própria |
 | Glossário | [glossary.md](glossary.md) | 72 termos: 66 confirmados, 6 hipóteses |
 
 ---
