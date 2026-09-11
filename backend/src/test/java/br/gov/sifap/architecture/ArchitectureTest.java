@@ -145,4 +145,16 @@ class ArchitectureTest {
                             "br.gov.sifap.socialprogram.internal..")
                     .because("o calculo le o cadastro por BeneficiaryPayrollFeed e o catalogo por "
                             + "SocialProgramQuery; alcancar o agregado alheio traria o modelo junto");
+
+    @ArchTest
+    static final ArchRule conciliacao_e_escritora_do_mesmo_agregado_da_folha =
+            noClasses()
+                    .that()
+                    .resideOutsideOfPackage("br.gov.sifap.payment..")
+                    .should()
+                    .dependOnClassesThat()
+                    .resideInAPackage("br.gov.sifap.payment.internal.reconciliation..")
+                    .because("a conciliacao vive dentro de payment porque escreve no agregado "
+                            + "Payment; contexto separado repetiria o antipadrao de dois "
+                            + "escritores do mesmo dado");
 }

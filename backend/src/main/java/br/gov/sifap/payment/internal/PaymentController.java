@@ -5,11 +5,14 @@ import br.gov.sifap.payment.DiscountEntry;
 import br.gov.sifap.payment.PaymentQuery;
 import br.gov.sifap.payment.PaymentView;
 import br.gov.sifap.payment.PayrollCycleResult;
+import br.gov.sifap.payment.ReconciliationResult;
+import br.gov.sifap.payment.internal.reconciliation.ReconciliationService;
 import br.gov.sifap.shared.document.Cpf;
 import br.gov.sifap.shared.event.Actor;
 import br.gov.sifap.shared.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Pattern;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -39,16 +42,19 @@ class PaymentController {
     private final PayrollCycleService cycleService;
     private final PaymentAdjustmentService adjustmentService;
     private final BankRemittanceService remittanceService;
+    private final ReconciliationService reconciliationService;
     private final PaymentQuery query;
 
     PaymentController(
             PayrollCycleService cycleService,
             PaymentAdjustmentService adjustmentService,
             BankRemittanceService remittanceService,
+            ReconciliationService reconciliationService,
             PaymentQuery query) {
         this.cycleService = cycleService;
         this.adjustmentService = adjustmentService;
         this.remittanceService = remittanceService;
+        this.reconciliationService = reconciliationService;
         this.query = query;
     }
 
@@ -67,6 +73,15 @@ class PaymentController {
             @RequestParam @Pattern(regexp = PERIOD_PATTERN) String referencePeriod,
             @RequestHeader("X-Sifap-Actor-Id") String actorId) {
         return remittanceService.issue(cycleId, referencePeriod, Actor.process(actorId));
+    }
+
+    @PostMapping("/reconciliations")
+    ResponseEntity<ReconciliationResult> reconcile(
+            @Valid @RequestBody ReconcileRequest request,
+            @RequestHeader("X-Sifap-Actor-Id") String actorId) {
+        ReconciliationResult result = reconciliationService.reconcile(
+                request.fileName(), request.referencePeriod(), request.lines(), Actor.process(actorId));
+        return ResponseEntity.status(HttpStatus.CREATED).body(result);
     }
 
     @PostMapping("/{cpf}/periods/{referencePeriod}/discounts")
@@ -117,5 +132,13 @@ class PaymentController {
             @NotBlank String programCode,
             @NotBlank @Pattern(regexp = PERIOD_PATTERN, message = "periodo deve estar no formato AAAAMM")
                     String referencePeriod) {
+    }
+
+    /** O conteudo vem no corpo; a identidade do arquivo e o resumo dele, nao o nome. */
+    record ReconcileRequest(
+            @NotBlank String fileName,
+            @NotBlank @Pattern(regexp = PERIOD_PATTERN, message = "periodo deve estar no formato AAAAMM")
+                    String referencePeriod,
+            @NotEmpty List<String> lines) {
     }
 }

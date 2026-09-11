@@ -23,6 +23,10 @@ public record PaymentView(
         Optional<BigDecimal> amountCorrection,
         Optional<BigDecimal> correctionIndex,
         Optional<LocalDate> correctedAt,
+        Optional<ReconciliationStatus> reconciliationStatus,
+        Optional<BigDecimal> amountReconciled,
+        Optional<LocalDate> creditDate,
+        Optional<String> bankCode,
         List<AppliedFactorView> appliedFactors,
         List<DiscountView> discounts) {
 

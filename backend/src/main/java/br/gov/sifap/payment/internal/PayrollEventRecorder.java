@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * exatamente o silencio que o {@code REQ-AUD-010} existe para eliminar.
  */
 @Service
-class PayrollEventRecorder {
+public class PayrollEventRecorder {
 
     private final ApplicationEventPublisher publisher;
 
@@ -24,7 +24,7 @@ class PayrollEventRecorder {
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    void record(AuditableEvent event) {
+    public void record(AuditableEvent event) {
         publisher.publishEvent(event);
     }
 }
